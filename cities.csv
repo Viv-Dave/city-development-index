@@ -1,0 +1,11 @@
+city_id,city,state,population,density,workforce_participation_rate,literacy_rate,water_coverage_pct,sewerage_coverage_pct,health_facilities_per_100k,crime_rate_per_100k,green_space_pct,pm25,pm10,no2,poverty_rate_pct,waste_collection_pct,waste_treatment_pct,public_transport_score,road_quality_score,internet_access_pct,school_access_pct,slum_population_pct,gender_workforce_gap_pct,municipal_service_score,economic_density_score,governance_score
+1,Mumbai,Maharashtra,21500000,32000,52.4,74.4,92,88,7.8,310,18.2,4.9,16.5,3.1,21.5,82,91,68,88,74,89,18.5,8.2,96,61,72
+2,Pune,Maharashtra,7200000,12500,56.8,88.3,95,91,8.9,245,32.5,3.7,12.8,2.4,15.2,88,94,76,91,81,92,13.2,7.5,94,68,78
+3,Bengaluru,Karnataka,13500000,11000,58.7,88.5,87,79,9.4,210,36.8,3.2,11.2,2.1,14.8,84,86,72,94,87,90,12.5,9.1,97,70,82
+4,Chennai,Tamil Nadu,11500000,10500,54.9,90.2,93,86,9.1,225,29.4,3.8,13.5,2.7,17.0,87,92,70,89,82,91,14.1,8.0,95,67,79
+5,Delhi,Delhi,20000000,11300,51.6,86.2,96,94,10.2,390,14.7,7.1,18.9,4.0,25.3,91,97,81,96,78,93,21.8,6.9,98,63,74
+6,Hyderabad,Telangana,10500000,8500,57.2,83.3,91,84,8.6,205,31.7,3.5,12.4,2.3,16.1,86,90,73,92,84,89,12.9,8.7,96,66,80
+7,Ahmedabad,Gujarat,8500000,11500,55.1,87.6,94,89,8.2,235,27.8,4.1,14.2,2.8,18.0,89,93,77,90,79,91,15.4,8.4,95,69,77
+8,Surat,Gujarat,7500000,14500,58.1,87.9,96,92,9.0,190,34.2,2.9,9.8,1.9,13.5,93,96,82,91,85,94,10.8,9.3,97,73,84
+9,Indore,Madhya Pradesh,2500000,5000,55.7,85.2,89,81,8.0,175,41.5,2.6,10.5,2.0,12.8,90,88,75,87,83,88,11.4,8.9,93,71,86
+10,Bhopal,Madhya Pradesh,2000000,3900,53.8,82.3,88,80,7.6,160,45.2,2.4,9.2,1.8,11.9,89,87,71,86,80,87,10.2,8.6,92,70,85
