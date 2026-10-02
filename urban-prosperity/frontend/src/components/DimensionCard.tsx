@@ -86,15 +86,17 @@ export const DimensionCard: React.FC<DimensionCardProps> = ({
                   <span className="font-semibold text-slate-900">
                     {formatRawValue(ind.raw, ind.unit)}
                   </span>
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded flex items-center ${
-                      ind.normalized >= 60
-                        ? "text-emerald-700 bg-emerald-50"
-                        : "text-amber-700 bg-amber-50"
-                    }`}
-                  >
-                    {ind.normalized.toFixed(0)}
-                  </span>
+                  {ind.normalized !== null && ind.normalized !== undefined && (
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded flex items-center ${
+                        ind.normalized >= 60
+                          ? "text-emerald-700 bg-emerald-50"
+                          : "text-amber-700 bg-amber-50"
+                      }`}
+                    >
+                      {ind.normalized.toFixed(0)}
+                    </span>
+                  )}
                 </div>
               </div>
             );

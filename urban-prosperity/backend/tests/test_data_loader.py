@@ -39,5 +39,8 @@ def test_load_and_seed_data(test_db):
     indicators = test_db.query(CityIndicator).filter(CityIndicator.city_id == 1).all()
     assert len(indicators) > 15
     for ind in indicators:
-        assert ind.normalized_value is not None
-        assert 0.0 <= ind.normalized_value <= 100.0
+        if ind.direction == "contextual":
+            assert ind.normalized_value is None
+        else:
+            assert ind.normalized_value is not None
+            assert 0.0 <= ind.normalized_value <= 100.0

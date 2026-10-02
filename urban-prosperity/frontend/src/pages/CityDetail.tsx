@@ -103,7 +103,7 @@ export const CityDetail: React.FC<CityDetailProps> = ({
     {
       key: "productivity",
       score: cityCPI.dimensions.productivity,
-      keys: ["workforce_participation_rate", "economic_density_score", "density"],
+      keys: ["workforce_participation_rate", "economic_density_score"],
     },
     {
       key: "infrastructure",
@@ -123,7 +123,7 @@ export const CityDetail: React.FC<CityDetailProps> = ({
     {
       key: "environment",
       score: cityCPI.dimensions.environment,
-      keys: ["pm25", "green_space_pct", "waste_collection_pct"],
+      keys: ["pm25_ug_m3", "green_space_pct", "waste_collection_pct"],
     },
     {
       key: "governance",
@@ -295,9 +295,9 @@ export const CityDetail: React.FC<CityDetailProps> = ({
         {/* Environmental Indicators Quick Row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { key: "pm25", label: "PM2.5", color: "text-rose-600" },
-            { key: "pm10", label: "PM10", color: "text-amber-600" },
-            { key: "no2", label: "NO2", color: "text-purple-600" },
+            { key: "pm25_ug_m3", label: "PM2.5", color: "text-rose-600" },
+            { key: "pm10_ug_m3", label: "PM10", color: "text-amber-600" },
+            { key: "no2_ug_m3", label: "NO2", color: "text-purple-600" },
             { key: "green_space_pct", label: "Green Space", color: "text-emerald-600" },
             { key: "waste_collection_pct", label: "Waste Collection", color: "text-blue-600" },
             { key: "waste_treatment_pct", label: "Waste Treatment", color: "text-teal-600" },
@@ -313,7 +313,7 @@ export const CityDetail: React.FC<CityDetailProps> = ({
                   {ind.raw} {ind.unit || ""}
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium">
-                  Idx: {ind.normalized.toFixed(0)}/100
+                  Idx: {ind.normalized != null ? ind.normalized.toFixed(0) : "—"}/100
                 </span>
               </div>
             );
@@ -324,7 +324,7 @@ export const CityDetail: React.FC<CityDetailProps> = ({
         {predictionData?.pm25_forecast && (
           <PM25TimeSeriesChart
             forecast={predictionData.pm25_forecast}
-            currentPM25={cityCPI.indicators.pm25?.raw || 3.5}
+            currentPM25={cityCPI.indicators.pm25_ug_m3?.raw || 3.5}
           />
         )}
       </div>

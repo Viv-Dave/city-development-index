@@ -64,7 +64,7 @@ export const MethodologyPage: React.FC = () => {
             {
               step: "STEP 2",
               title: "AI / STATISTICAL MEASUREMENT MODELS",
-              desc: "Deep LSTM air quality forecasting, YOLOv8 pavement distress analysis, and CatBoost missing-value estimation.",
+              desc: "Deep LSTM air quality forecasting, CatBoost missing-value estimation, and SHAP feature attribution.",
               icon: Cpu,
               color: "bg-purple-600 text-white",
             },
@@ -204,9 +204,9 @@ export const MethodologyPage: React.FC = () => {
               feeds: "pm25, pm10, no2 hourly telemetry",
             },
             {
-              source: "RDD-India / RDD2020",
-              type: "Pavement Distress Computer Vision Benchmark",
-              feeds: "road_quality_score, damage density via YOLOv8",
+              source: "NHAI / MoRTH / PMGSY",
+              type: "Road Quality & Highway Maintenance Telemetry",
+              feeds: "road_quality_score, urban corridor infrastructure surveys",
             },
             {
               source: "Bhuvan / ISRO National Remote Sensing Centre",

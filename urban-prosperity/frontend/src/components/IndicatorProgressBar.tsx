@@ -8,10 +8,12 @@ interface IndicatorProgressBarProps {
 }
 
 export const IndicatorProgressBar: React.FC<IndicatorProgressBarProps> = ({ indicator }) => {
+  const isContextual = indicator.direction === "contextual";
   const isHigherBetter = indicator.direction === "positive";
   const score = indicator.normalized;
 
-  const getBarColor = (val: number) => {
+  const getBarColor = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return "bg-slate-300";
     if (val >= 75) return "bg-emerald-500";
     if (val >= 55) return "bg-blue-500";
     if (val >= 40) return "bg-amber-500";
@@ -25,13 +27,16 @@ export const IndicatorProgressBar: React.FC<IndicatorProgressBarProps> = ({ indi
           <span className="font-semibold text-slate-800">{indicator.display_name}</span>
           <span
             className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-              isHigherBetter
+              isContextual
+                ? "bg-slate-100 text-slate-500"
+                : isHigherBetter
                 ? "bg-slate-100 text-slate-600"
                 : "bg-amber-50 text-amber-700 border border-amber-200"
             }`}
-            title={isHigherBetter ? "Higher raw value yields higher CPI score" : "Lower raw value yields higher CPI score"}
           >
-            {isHigherBetter ? (
+            {isContextual ? (
+              <>Contextual Metric</>
+            ) : isHigherBetter ? (
               <>
                 <ArrowUp className="w-3 h-3 text-emerald-600" /> Higher is better
               </>
@@ -47,20 +52,25 @@ export const IndicatorProgressBar: React.FC<IndicatorProgressBarProps> = ({ indi
           <span className="text-slate-500">
             Raw: <span className="font-semibold text-slate-800">{formatRawValue(indicator.raw, indicator.unit)}</span>
           </span>
-          <span className="text-slate-400">|</span>
-          <span className="text-slate-500">
-            Index: <span className="font-bold text-blue-700">{score.toFixed(1)}/100</span>
-          </span>
+          {!isContextual && score !== null && score !== undefined && (
+            <>
+              <span className="text-slate-400">|</span>
+              <span className="text-slate-500">
+                Index: <span className="font-bold text-blue-700">{(score).toFixed(1)}/100</span>
+              </span>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Horizontal Progress Bar */}
-      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-300 ${getBarColor(score)}`}
-          style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
-        />
-      </div>
+      {!isContextual && score !== null && score !== undefined && (
+        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${getBarColor(score)}`}
+            style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 };

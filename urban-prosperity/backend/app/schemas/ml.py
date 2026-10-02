@@ -26,24 +26,6 @@ class PM25ForecastResponse(BaseModel):
     status: str
     inference_source: str = "LSTM Air Quality Model (PyTorch Architecture)"
 
-class RoadDamageBox(BaseModel):
-    x_min: float
-    y_min: float
-    x_max: float
-    y_max: float
-    confidence: float
-    damage_type: str  # e.g., 'transverse_crack', 'longitudinal_crack', 'pothole'
-
-class RoadDamageResponse(BaseModel):
-    city_id: Optional[int] = None
-    corridor_name: Optional[str] = "Primary Urban Arterial Corridor"
-    total_detections: int
-    detections: List[RoadDamageBox]
-    damage_density_per_sqm: float
-    estimated_road_quality_score: float
-    status: str
-    model_type: str = "YOLOv8n Road Damage (RDD-India Benchmark)"
-
 class SHAPFeatureContribution(BaseModel):
     feature: str
     display_name: str
@@ -61,4 +43,28 @@ class ExplainabilityResponse(BaseModel):
     predicted_value: float
     features: List[SHAPFeatureContribution]
     summary: str
+    model_used: str = "CatBoostRegressor + SHAP TreeExplainer"
+
+
+# ── QoL Predict (interactive dashboard override endpoint) ─────────────────────
+
+class QolSHAPEntry(BaseModel):
+    feature: str
+    raw_value: float
+    shap_value: float
+    direction: str  # "positive" or "negative"
+
+
+class QolPredictRequest(BaseModel):
+    city: str
+    year: Optional[int] = 2024
+    overrides: Optional[Dict[str, float]] = Field(default_factory=dict)
+
+
+class QolPredictResponse(BaseModel):
+    quality_of_life_index: float
+    base_value: float
+    shap: List[QolSHAPEntry]
+    top_positive: List[QolSHAPEntry]
+    top_negative: List[QolSHAPEntry]
     model_used: str = "CatBoostRegressor + SHAP TreeExplainer"

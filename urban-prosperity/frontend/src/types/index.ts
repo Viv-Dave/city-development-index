@@ -9,9 +9,9 @@ export interface CPIDimensions {
 
 export interface IndicatorValues {
   raw: number;
-  normalized: number;
+  normalized: number | null;
   unit: string | null;
-  direction: "positive" | "negative";
+  direction: "positive" | "negative" | "contextual" | string;
   dimension: string;
   display_name: string;
 }
@@ -83,7 +83,7 @@ export interface IndicatorMetadata {
   name: string;
   display_name: string;
   dimension: string;
-  direction: "positive" | "negative";
+  direction: "positive" | "negative" | "contextual" | string;
   unit: string;
   description: string;
   min_value: number | null;
@@ -99,7 +99,7 @@ export interface IndicatorRead {
   normalized_value: number | null;
   unit: string | null;
   dimension: string;
-  direction: "positive" | "negative";
+  direction: "positive" | "negative" | "contextual" | string;
   display_name: string;
   description: string;
 }
@@ -131,26 +131,6 @@ export interface PM25ForecastResponse {
   inference_source: string;
 }
 
-export interface RoadDamageBox {
-  x_min: number;
-  y_min: number;
-  x_max: number;
-  y_max: number;
-  confidence: number;
-  damage_type: string;
-}
-
-export interface RoadDamageResponse {
-  city_id: number | null;
-  corridor_name: string;
-  total_detections: number;
-  detections: RoadDamageBox[];
-  damage_density_per_sqm: number;
-  estimated_road_quality_score: number;
-  status: string;
-  model_type: string;
-}
-
 export interface SHAPFeatureContribution {
   feature: string;
   display_name: string;
@@ -177,11 +157,34 @@ export interface UnifiedPredictionData {
   city: string;
   state: string;
   pm25_forecast: PM25ForecastResponse;
-  road_damage_assessment: RoadDamageResponse;
   estimated_target_indicator: {
     metric_name: string;
     estimated_value: number;
     model: string;
   };
   explainability: ExplainabilityResponse;
+}
+
+// ── QoL predict (real CatBoost + SHAP endpoint) ───────────────────────────────
+
+export interface QolSHAPEntry {
+  feature: string;
+  raw_value: number;
+  shap_value: number;
+  direction: "positive" | "negative";
+}
+
+export interface QolPredictRequest {
+  city: string;
+  year?: number;
+  overrides?: Record<string, number>;
+}
+
+export interface QolPredictResponse {
+  quality_of_life_index: number;
+  base_value: number;
+  shap: QolSHAPEntry[];
+  top_positive: QolSHAPEntry[];
+  top_negative: QolSHAPEntry[];
+  model_used: string;
 }

@@ -9,8 +9,9 @@ import {
   IndicatorRead,
   UnifiedPredictionData,
   PM25ForecastResponse,
-  RoadDamageResponse,
   ExplainabilityResponse,
+  QolPredictRequest,
+  QolPredictResponse,
 } from "../types";
 
 export const cpiService = {
@@ -71,17 +72,13 @@ export const cpiService = {
     return res.data;
   },
 
-  async postRoadDamage(formData: FormData): Promise<RoadDamageResponse> {
-    const res = await apiClient.post<RoadDamageResponse>("/models/road-damage", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  async getExplainability(cityId: number): Promise<ExplainabilityResponse> {
+    const res = await apiClient.get<ExplainabilityResponse>(`/explainability/${cityId}`);
     return res.data;
   },
 
-  async getExplainability(cityId: number): Promise<ExplainabilityResponse> {
-    const res = await apiClient.get<ExplainabilityResponse>(`/explainability/${cityId}`);
+  async postQolPredict(data: QolPredictRequest): Promise<QolPredictResponse> {
+    const res = await apiClient.post<QolPredictResponse>("/predictions/qol/predict", data);
     return res.data;
   },
 };

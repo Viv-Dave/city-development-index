@@ -4,79 +4,99 @@ from typing import Dict, List, Optional
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from app.config import settings, DIMENSION_CONFIG, INDICATOR_METADATA, CITY_COORDINATES
+from app.config import settings, DIMENSION_CONFIG, INDICATOR_CONFIG, CITY_COORDINATES
 from app.models.city import City
 from app.models.indicator import CityIndicator
-from app.services.normalization import normalize_value
+from app.services.normalization import normalize_indicator, normalize_value
 
 logger = logging.getLogger("urban_prosperity.data_loader")
 
-REQUIRED_CITY_COLS = ["city_id", "city", "state", "population", "density"]
+REQUIRED_CITY_COLS = ["city", "state"]
+
+# Indicator key aliases mapping shorthand names to primary CSV columns
+INDICATOR_ALIASES = {
+    "pm25": "pm25_ug_m3",
+    "pm10": "pm10_ug_m3",
+    "no2": "no2_ug_m3",
+    "population": "population_2011",
+    "density": "density_per_km2",
+}
 
 def load_and_seed_data(db: Session, csv_path: Optional[str] = None) -> int:
     """
-    Reads cities.csv, validates columns, normalizes indicators, and seeds database.
-    Supports idempotency (updates existing or inserts new).
+    Reads cpi_india_research_dataset.csv, validates columns,
+    computes min/max normalization, and seeds database cleanly.
     """
     if not csv_path:
-        # Check default paths
         candidates = [
             settings.CSV_DATA_PATH,
+            os.path.join(os.path.dirname(__file__), "..", "..", "data", "cpi_india_research_dataset.csv"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "cpi_india_research_dataset.csv"),
+            "cpi_india_research_dataset.csv",
+            "data/cpi_india_research_dataset.csv",
             os.path.join(os.path.dirname(__file__), "..", "..", "data", "cities.csv"),
             os.path.join(os.path.dirname(__file__), "..", "..", "..", "cities.csv"),
             "cities.csv",
             "data/cities.csv"
         ]
         for p in candidates:
-            if os.path.exists(p):
+            if p and os.path.exists(p):
                 csv_path = p
                 break
 
     if not csv_path or not os.path.exists(csv_path):
-        logger.error(f"cities.csv not found in candidate paths. Checked: {candidates}")
-        raise FileNotFoundError(f"cities.csv not found. Please provide a valid CSV path.")
+        logger.error(f"Dataset not found. Checked: {candidates}")
+        raise FileNotFoundError("City research dataset not found. Please provide a valid CSV path.")
 
-    logger.info(f"Loading city data from {csv_path}")
+    logger.info(f"Ingesting city dataset from {csv_path}")
     df = pd.read_csv(csv_path)
 
-    # 1. Validate required columns
     for col in REQUIRED_CITY_COLS:
         if col not in df.columns:
-            raise ValueError(f"Required column '{col}' missing from CSV file.")
+            raise ValueError(f"Required column '{col}' missing from dataset.")
 
-    # 2. Convert numeric columns and check missing values
-    numeric_cols = [c for c in df.columns if c not in ["city", "state"]]
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-        missing_count = df[col].isna().sum()
-        if missing_count > 0:
-            logger.warning(f"Detected {missing_count} missing values in column '{col}'. Filling with median.")
-            df[col] = df[col].fillna(df[col].median())
+    # Assign city_id if absent
+    if "city_id" not in df.columns:
+        df["city_id"] = range(1, len(df) + 1)
 
-    # Pre-calculate min/max for each indicator present in CSV
+    # Convert numeric columns
+    non_numeric = ["city", "state", "dataset_note", "source_year", "data_status"]
+    for col in df.columns:
+        if col not in non_numeric:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Pre-calculate cohort min and max for all indicators in INDICATOR_CONFIG
     indicator_extrema: Dict[str, Dict[str, float]] = {}
-    for ind_name in INDICATOR_METADATA.keys():
-        if ind_name in df.columns:
-            indicator_extrema[ind_name] = {
-                "min": float(df[ind_name].min()),
-                "max": float(df[ind_name].max())
-            }
+    for ind_name, cfg in INDICATOR_CONFIG.items():
+        csv_col = cfg["csv_column"]
+        if csv_col in df.columns:
+            series = df[csv_col].dropna()
+            if not series.empty:
+                indicator_extrema[ind_name] = {
+                    "min": float(series.min()),
+                    "max": float(series.max())
+                }
 
-    # 3. Seed / Update database
     seeded_count = 0
     for _, row in df.iterrows():
         city_id = int(row["city_id"])
         city_name = str(row["city"]).strip()
         state_name = str(row["state"]).strip()
-        population = float(row["population"])
-        density = float(row["density"])
 
-        # Determine coordinates
+        # Demographics
+        pop_val = row.get("population_2011", row.get("population", 0.0))
+        density_val = row.get("density_per_km2", row.get("density", 0.0))
+        population = float(pop_val) if pd.notna(pop_val) else 0.0
+        density = float(density_val) if pd.notna(density_val) else 0.0
+
+        # Coordinates from CSV or fallback registry
         coords = CITY_COORDINATES.get(city_name, {"latitude": 20.5937, "longitude": 78.9629})
-        lat = float(row.get("latitude", coords["latitude"]))
-        lon = float(row.get("longitude", coords["longitude"]))
+        row_lat = row.get("latitude")
+        row_lon = row.get("longitude")
+        lat = float(row_lat) if pd.notna(row_lat) else coords["latitude"]
+        lon = float(row_lon) if pd.notna(row_lon) else coords["longitude"]
 
-        # Query or create City
+        # Insert or update City
         city_record = db.query(City).filter(City.city_id == city_id).first()
         if not city_record:
             city_record = City(
@@ -99,13 +119,21 @@ def load_and_seed_data(db: Session, csv_path: Optional[str] = None) -> int:
             city_record.latitude = lat
             city_record.longitude = lon
 
-        # Seed CityIndicators
-        for ind_name, meta in INDICATOR_METADATA.items():
-            if ind_name in df.columns:
-                raw_val = float(row[ind_name])
-                min_val = indicator_extrema[ind_name]["min"]
-                max_val = indicator_extrema[ind_name]["max"]
-                norm_val = normalize_value(raw_val, min_val, max_val, meta["direction"])
+        # Seed all configured indicators
+        for ind_name, cfg in INDICATOR_CONFIG.items():
+            csv_col = cfg["csv_column"]
+            if csv_col in df.columns and pd.notna(row[csv_col]):
+                raw_val = float(row[csv_col])
+                if cfg["direction"] == "contextual":
+                    norm_val = None
+                else:
+                    extrema = indicator_extrema.get(ind_name, {})
+                    norm_val = normalize_indicator(
+                        raw_val,
+                        cfg,
+                        cohort_min=extrema.get("min"),
+                        cohort_max=extrema.get("max"),
+                    )
 
                 ind_record = db.query(CityIndicator).filter(
                     CityIndicator.city_id == city_id,
@@ -118,17 +146,19 @@ def load_and_seed_data(db: Session, csv_path: Optional[str] = None) -> int:
                         indicator_name=ind_name,
                         value=raw_val,
                         normalized_value=norm_val,
-                        unit=meta["unit"],
-                        dimension=meta["dimension"],
-                        direction=meta["direction"]
+                        unit=cfg["unit"],
+                        dimension=cfg["dimension"],
+                        direction=cfg["direction"]
                     )
                     db.add(ind_record)
                 else:
                     ind_record.value = raw_val
                     ind_record.normalized_value = norm_val
-                    ind_record.unit = meta["unit"]
-                    ind_record.dimension = meta["dimension"]
-                    ind_record.direction = meta["direction"]
+                    ind_record.unit = cfg["unit"]
+                    ind_record.dimension = cfg["dimension"]
+                    ind_record.direction = cfg["direction"]
+
+
 
         seeded_count += 1
 

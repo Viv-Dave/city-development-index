@@ -4,14 +4,13 @@ from sqlalchemy.orm import Session
 from app.models.city import City
 from app.models.indicator import CityIndicator
 from app.ml.lstm.service import pm25_predictor
-from app.ml.yolo.service import road_damage_model
 from app.ml.catboost.service import indicator_estimator
 from app.ml.explainability.service import explainer_service
-from app.schemas.ml import PM25ForecastResponse, RoadDamageResponse, ExplainabilityResponse
+from app.schemas.ml import PM25ForecastResponse, ExplainabilityResponse
 
 class ModelService:
     @staticmethod
-    def get_city_predictions(city_id: int, db: Session) -> Dict:
+    def get_city_predictions(city_id: int, db: Session) -> Optional[Dict]:
         city = db.query(City).filter(City.city_id == city_id).first()
         if not city:
             return None
@@ -27,16 +26,10 @@ class ModelService:
             city_id=city.city_id
         )
 
-        # 2. Road damage estimation
-        road_damage = road_damage_model.predict(
-            image_name=f"{city.city.lower()}_primary_corridor.jpg",
-            city_id=city.city_id
-        )
-
-        # 3. Tabular estimation
+        # 2. Tabular estimation
         estimated_indicator = indicator_estimator.predict(indicators_map)
 
-        # 4. SHAP explainability
+        # 3. SHAP explainability
         shap_explanation = explainer_service.explain(
             features=indicators_map,
             city_id=city.city_id,
@@ -48,7 +41,6 @@ class ModelService:
             "city": city.city,
             "state": city.state,
             "pm25_forecast": pm25_forecast,
-            "road_damage_assessment": road_damage,
             "estimated_target_indicator": {
                 "metric_name": "Quality of Life Synthesized Index",
                 "estimated_value": round(estimated_indicator, 2),
@@ -83,18 +75,6 @@ class ModelService:
         return pm25_predictor.predict_24h_forecast(
             base_pm25=base_pm25,
             city_name=city_name,
-            city_id=city_id
-        )
-
-    @staticmethod
-    def run_road_damage_inference(
-        image_bytes: Optional[bytes],
-        image_name: Optional[str],
-        city_id: Optional[int]
-    ) -> RoadDamageResponse:
-        return road_damage_model.predict(
-            image_bytes=image_bytes,
-            image_name=image_name,
             city_id=city_id
         )
 

@@ -106,10 +106,10 @@ def test_indicators_city():
     assert len(data["indicators"]) > 0
 
 def test_specific_indicator():
-    response = client.get("/api/indicators/1/pm25")
+    response = client.get("/api/indicators/1/pm25_ug_m3")
     assert response.status_code == 200
     data = response.json()
-    assert data["indicator_name"] == "pm25"
+    assert data["indicator_name"] == "pm25_ug_m3"
     assert data["direction"] == "negative"
 
 def test_predictions_endpoint():
@@ -117,7 +117,6 @@ def test_predictions_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "pm25_forecast" in data
-    assert "road_damage_assessment" in data
     assert "estimated_target_indicator" in data
     assert "explainability" in data
 
@@ -127,13 +126,6 @@ def test_pm25_forecast_post():
     data = response.json()
     assert len(data["forecast_24h"]) == 24
     assert data["city"] == "Mumbai"
-
-def test_road_damage_post():
-    response = client.post("/api/models/road-damage", data={"city_id": 1})
-    assert response.status_code == 200
-    data = response.json()
-    assert "damage_density_per_sqm" in data
-    assert "estimated_road_quality_score" in data
 
 def test_explainability_get():
     response = client.get("/api/explainability/1")

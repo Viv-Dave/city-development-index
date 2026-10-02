@@ -39,32 +39,34 @@ def generate_urban_insights(
 
     # 2. Evaluate Specific Indicator Drivers
     if indicators:
-        # Sort by normalized value
-        sorted_inds = sorted(indicators.values(), key=lambda ind: ind.normalized, reverse=True)
-        top_positive = sorted_inds[0]
-        top_negative = sorted_inds[-1]
-
-        insights.append(
-            f"{top_positive.display_name} ({top_positive.raw} {top_positive.unit or ''}) is a primary positive driver, scoring {top_positive.normalized:.1f}/100."
-        )
-
-        if top_negative.direction == "negative":
+        # Sort by normalized value (excluding contextual ones which have None)
+        valid_inds = [ind for ind in indicators.values() if ind.normalized is not None]
+        if valid_inds:
+            sorted_inds = sorted(valid_inds, key=lambda ind: ind.normalized, reverse=True)
+            top_positive = sorted_inds[0]
+            top_negative = sorted_inds[-1]
+    
             insights.append(
-                f"{top_negative.display_name} ({top_negative.raw} {top_negative.unit or ''}) exerts significant drag on urban prosperity due to high adverse intensity."
+                f"{top_positive.display_name} ({top_positive.raw} {top_positive.unit or ''}) is a primary positive driver, scoring {top_positive.normalized:.1f}/100."
             )
-        else:
-            insights.append(
-                f"{top_negative.display_name} ({top_negative.raw} {top_negative.unit or ''}) demonstrates low coverage or deficit ({top_negative.normalized:.1f}/100), constraining service parity."
-            )
+    
+            if top_negative.direction == "negative":
+                insights.append(
+                    f"{top_negative.display_name} ({top_negative.raw} {top_negative.unit or ''}) exerts significant drag on urban prosperity due to high adverse intensity."
+                )
+            else:
+                insights.append(
+                    f"{top_negative.display_name} ({top_negative.raw} {top_negative.unit or ''}) demonstrates low coverage or deficit ({top_negative.normalized:.1f}/100), constraining service parity."
+                )
 
     # 3. Targeted Environmental & Infrastructure Checks
-    if "pm25" in indicators:
-        pm25 = indicators["pm25"]
-        if pm25.raw > 4.5:
+    pm25 = indicators.get("pm25_ug_m3") or indicators.get("pm25")
+    if pm25:
+        if pm25.raw > 50.0:
             insights.append(
                 f"Air pollution levels (PM2.5: {pm25.raw} µg/m³) require urgent emission control and micro-climate vegetative buffers."
             )
-        elif pm25.raw < 3.2:
+        elif pm25.raw < 35.0:
             insights.append(
                 f"Ambient air quality (PM2.5: {pm25.raw} µg/m³) demonstrates superior atmospheric dispersion compared to national cohort medians."
             )

@@ -11,7 +11,7 @@ class CPIDimensions(BaseModel):
 
 class IndicatorValues(BaseModel):
     raw: float
-    normalized: float
+    normalized: Optional[float] = None
     unit: Optional[str] = None
     direction: str
     dimension: str

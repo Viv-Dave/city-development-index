@@ -20,9 +20,6 @@ def compute_city_cpi(city: City, indicators: List[CityIndicator]) -> Tuple[float
         for name in ind_names:
             if name in indicator_dict and indicator_dict[name].normalized_value is not None:
                 scores.append(indicator_dict[name].normalized_value)
-            elif hasattr(city, name):
-                # Fallback to city table column if applicable (e.g. population, density)
-                pass
         
         if scores:
             dim_score = float(np.mean(scores))
@@ -40,7 +37,7 @@ def compute_city_cpi(city: City, indicators: List[CityIndicator]) -> Tuple[float
         governance=dimension_scores["governance"],
     )
 
-    # CPI is average of the 6 dimension scores (equal 1/6 weight)
+    # Overall CPI is average of the 6 dimension scores (equal 1/6 weight)
     dim_values = [
         cpi_dimensions.productivity,
         cpi_dimensions.infrastructure,
@@ -51,13 +48,14 @@ def compute_city_cpi(city: City, indicators: List[CityIndicator]) -> Tuple[float
     ]
     overall_cpi = round(float(np.clip(np.mean(dim_values), 0.0, 100.0)), 2)
 
-    # Prepare detailed indicator map
+    # Detailed indicator map
     indicators_map: Dict[str, IndicatorValues] = {}
     for ind in indicators:
         meta = INDICATOR_METADATA.get(ind.indicator_name, {})
+        norm_val = round(ind.normalized_value, 2) if ind.normalized_value is not None else None
         indicators_map[ind.indicator_name] = IndicatorValues(
             raw=ind.value,
-            normalized=round(ind.normalized_value or 0.0, 2),
+            normalized=norm_val,
             unit=ind.unit or meta.get("unit"),
             direction=ind.direction or meta.get("direction", "positive"),
             dimension=ind.dimension or meta.get("dimension", "productivity"),

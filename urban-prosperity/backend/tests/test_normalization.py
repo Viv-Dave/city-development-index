@@ -27,12 +27,12 @@ def test_negative_indicator_normalization():
     assert pytest.approx(val_mid, 0.01) == 50.0
 
 def test_edge_case_max_equals_min():
-    # When max == min, division by zero is guarded and returns neutral 50.0
+    # When max == min, division by zero is guarded and returns 100.0
     res_pos = normalize_value(25.0, 25.0, 25.0, direction="positive")
-    assert res_pos == 50.0
+    assert res_pos == 100.0
 
     res_neg = normalize_value(25.0, 25.0, 25.0, direction="negative")
-    assert res_neg == 50.0
+    assert res_neg == 100.0
 
 def test_clamping_bounds():
     # Value above max should clamp to 100

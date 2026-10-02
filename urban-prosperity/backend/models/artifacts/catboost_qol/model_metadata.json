@@ -1,0 +1,54 @@
+{
+  "model_type": "CatBoostRegressor",
+  "model_file": "artifacts/catboost_qol/qol_catboost_model.cbm",
+  "target": "quality_of_life_index",
+  "features": [
+    "year",
+    "population",
+    "population_density",
+    "workforce_participation_rate",
+    "economic_density_score",
+    "water_coverage_pct",
+    "sewerage_coverage_pct",
+    "public_transit_score",
+    "road_quality_score",
+    "internet_access_pct",
+    "literacy_rate",
+    "healthcare_facilities_per_100k",
+    "crime_rate_per_100k",
+    "school_access_pct",
+    "poverty_rate_pct",
+    "informal_settlement_pct",
+    "gender_workforce_gap_pct",
+    "pm25_ug_m3",
+    "pm10_ug_m3",
+    "no2_ug_m3",
+    "green_space_pct",
+    "waste_collection_pct",
+    "waste_treatment_pct",
+    "municipal_service_score",
+    "governance_score"
+  ],
+  "excluded_identity_columns": [
+    "city_id",
+    "city",
+    "state"
+  ],
+  "training_rows": 260,
+  "training_years": [
+    2015,
+    2024
+  ],
+  "cities": 26,
+  "random_state": 42,
+  "dashboard_controls": {
+    "water_coverage_pct": "Water Coverage",
+    "green_space_pct": "Green Space",
+    "public_transit_score": "Transit Score",
+    "pm25_ug_m3": "PM2.5 Ambient"
+  },
+  "shap": {
+    "explainer": "shap.TreeExplainer",
+    "interpretation": "Model attribution; not causal effect."
+  }
+}

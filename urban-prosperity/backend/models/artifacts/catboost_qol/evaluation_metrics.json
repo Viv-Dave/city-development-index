@@ -1,0 +1,16 @@
+{
+  "model": "CatBoostRegressor",
+  "target": "quality_of_life_index",
+  "train_years": [
+    2015,
+    2023
+  ],
+  "test_year": 2024,
+  "n_observations": 260,
+  "train_size": 234,
+  "test_size": 26,
+  "MAE": 1.9445421790807924,
+  "RMSE": 3.0691897579487906,
+  "R2": 0.8223008636770011,
+  "best_iteration": 1193
+}
